@@ -1,7 +1,57 @@
+# version: "3.8"
+
+# services:
+#   web_test:
+#     image: nginx:alpine
+#     ports:
+#       - "8080:80"
+
 version: "3.8"
 
 services:
-  web_test:
-    image: nginx:alpine
+  # 1. Dịch vụ Cơ sở dữ liệu (MySQL)
+  database:
+    image: mysql:8.0
+    container_name: qldim_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_cua_ban
+      MYSQL_DATABASE: qldim_db
     ports:
-      - "8080:80"
+      - "3306:3306"
+    volumes:
+      - qldim_db_data:/var/lib/mysql
+      # Nếu có file init.sql trong thư mục database để tạo bảng ban đầu:
+      - ./database:/docker-entrypoint-initdb.d
+
+  # 2. Dịch vụ Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qldim_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: database
+      DB_USER: root
+      DB_PASSWORD: root_password_cua_ban
+      DB_NAME: qldim_db
+    depends_on:
+      - database
+
+  # 3. Dịch vụ Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: qldim_frontend
+    restart: always
+    ports:
+      - "3000:5173" # Mở port 3000 ở máy thật để truy cập vào port 5173 của container
+    depends_on:
+      - backend
+
+volumes:
+  qldim_db_data:
