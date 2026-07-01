@@ -9,6 +9,9 @@ import RoleManagement from "./pages/RoleManagement";
 import VoucherManagement from "./pages/VoucherManagement";
 import CustomerManagement from "./pages/CustomerManagement";
 import InvoiceManagement from "./pages/InvoiceManagement";
+import CategoryManagement from "./pages/CategoryManagement";
+import ProductManagement from "./pages/ProductManagement";
+import SupplierManagement from "./pages/SupplierManagement";
 
 export default function App() {
   return (
@@ -34,6 +37,9 @@ export default function App() {
             <Route path="/vouchers" element={<VoucherManagement />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/invoices" element={<InvoiceManagement />} />
+            <Route path="/categories" element={<CategoryManagement />} />
+            <Route path="/products" element={<ProductManagement />} />
+            <Route path="/suppliers" element={<SupplierManagement />} />
           </Routes>
         </main>
 

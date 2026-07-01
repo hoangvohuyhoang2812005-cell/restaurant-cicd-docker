@@ -935,3 +935,46 @@ app.listen(PORT, () => {
   console.log(`  Accounts API: http://localhost:${PORT}/api/accounts `);
   console.log(`===========================================`);
 });
+// Lấy danh sách khách hàng
+app.get('/api/customers', async (req, res) => {
+    const [rows] = await pool.query('SELECT * FROM customers');
+    res.json(rows);
+});
+
+// Thêm khách hàng mới
+app.post('/api/customers', async (req, res) => {
+    const { customer_name, phone } = req.body;
+    const [result] = await pool.query('INSERT INTO customers (customer_name, phone) VALUES (?, ?)', [customer_name, phone]);
+    res.status(201).json({ id: result.insertId, customer_name, phone });
+});
+// Lấy danh sách voucher
+app.get('/api/vouchers', async (req, res) => {
+    const [rows] = await pool.query('SELECT * FROM discounts');
+    res.json(rows);
+});
+
+// Tạo voucher mới
+app.post('/api/vouchers', async (req, res) => {
+    const { voucher_code, discount_type, discount_value, expiry_date } = req.body;
+    const [result] = await pool.query('INSERT INTO discounts (voucher_code, discount_type, discount_value, expiry_date) VALUES (?, ?, ?, ?)', 
+        [voucher_code, discount_type, discount_value, expiry_date]);
+    res.status(201).json({ id: result.insertId, voucher_code });
+});
+// Tạo hóa đơn mới (Sau khi thanh toán xong một order)
+app.post('/api/invoices', async (req, res) => {
+    const { order_id, customer_id, discount_id, total_amount, final_amount, payment_method } = req.body;
+    
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO invoices (order_id, customer_id, discount_id, total_amount, final_amount, payment_method) VALUES (?, ?, ?, ?, ?, ?)',
+            [order_id, customer_id, discount_id, total_amount, final_amount, payment_method]
+        );
+        
+        // Cập nhật trạng thái order thành 'Đã hoàn thành'
+        await pool.query('UPDATE orders SET status = "Đã hoàn thành" WHERE id = ?', [order_id]);
+        
+        res.status(201).json({ message: "Hóa đơn đã được tạo thành công", invoice_id: result.insertId });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
